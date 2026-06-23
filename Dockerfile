@@ -1,6 +1,11 @@
-# Use a lightweight OpenJDK image
-FROM eclipse-temurin:17-jdk-alpine
-# Copy the jar file from the target folder
-COPY target/*.jar app.jar
-# Command to run the application
+# Stage 1: Build the application
+FROM maven:3.9-eclipse-temurin-17 AS build
+COPY src /home/app/src
+COPY pom.xml /home/app
+RUN mvn -f /home/app/pom.xml clean package -DskipTests
+
+# Stage 2: Run the application
+FROM eclipse-temurin:17-jre-alpine
+COPY --from=build /home/app/target/*.jar app.jar
+EXPOSE 8080
 ENTRYPOINT ["java","-jar","/app.jar"]
